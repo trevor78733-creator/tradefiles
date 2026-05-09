@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Trading Journal
 
-## Getting Started
+A personal trading journal: log trades, see KPIs, charts, and a P&L calendar.
 
-First, run the development server:
+**Stack**: Next.js 16 · TypeScript · Tailwind v4 · shadcn/ui (Base UI) · Recharts · Prisma 7 · Postgres · Vercel-ready
+
+## Local development
+
+Requirements: Node.js 20.9+ (use [nvm](https://github.com/nvm-sh/nvm): `nvm install --lts`).
 
 ```bash
+# 1. install deps
+npm install
+
+# 2. start a local Postgres (Prisma's embedded dev server, no Docker)
+npx prisma dev --detach
+#   prints: postgres://postgres:postgres@localhost:51214/template1?sslmode=disable
+#   (port may differ — check `npx prisma dev ls`)
+
+# 3. fill in .env (copy from .env.example)
+cp .env.example .env
+#   - DATABASE_URL: the URL printed by `prisma dev`
+#   - APP_PASSWORD: whatever you want to type to log in
+#   - SESSION_SECRET: openssl rand -hex 32
+
+# 4. push schema and seed sample data
+npm run db:push
+npm run db:seed   # 100+ synthetic demo trades
+
+# 5. run dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# → http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sign in with the password you set in `.env`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+To stop the local Postgres: `npx prisma dev stop`. To wipe and restart: `npx prisma dev rm default && npx prisma dev --detach`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploying to Vercel + Neon
 
-## Learn More
+1. **Create a Neon Postgres database** at <https://neon.tech> (free tier, no credit card). Copy the pooled connection string.
+2. **Push this repo to GitHub** and import it into Vercel.
+3. In the Vercel project, set environment variables:
+   - `DATABASE_URL` — the Neon connection string
+   - `APP_PASSWORD` — your password
+   - `SESSION_SECRET` — `openssl rand -hex 32`
+4. After the first deploy, run schema push against Neon from your laptop:
+   ```bash
+   DATABASE_URL="<your-neon-url>" npx prisma db push
+   ```
+   (Optionally `npm run db:seed` for demo trades.)
 
-To learn more about Next.js, take a look at the following resources:
+## Architecture notes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `app/(authed)/` — everything behind the password gate (Dashboard, Trade Log, forms)
+- `app/login/` — password entry
+- `app/api/auth/` — POST = sign in (sets HMAC-signed session cookie); DELETE = sign out
+- `proxy.ts` — Next.js 16 proxy (was `middleware.ts` in v15) that gates routes
+- `actions/trades.ts` — Server Actions: createTrade, updateTrade, deleteTrade
+- `lib/db.ts` — Prisma client (uses `@prisma/adapter-pg`, required by Prisma 7)
+- `lib/stats.ts` — pure functions for KPIs, daily/cumulative P&L, calendar grid
+- `lib/auth.ts` — HMAC-signed cookie session, no third-party auth lib
+- `prisma/schema.prisma` — `Account` + `Trade` models. Trades belong to an account so multi-account is a UI add later, not a migration.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## What's not in v1 (queued for later)
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- CSV import from brokers (TopstepX, NinjaTrader, etc.)
+- Multi-account UI (schema already supports it)
+- Screenshot upload to Vercel Blob (currently you paste a URL)
+- Real auth (multi-user, OAuth)
+- Mobile-optimized layout polish

@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Account {
+  id        String   @id @default(cuid())
+  name      String
+  broker    String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  trades    Trade[]
+}
+
+enum TradeDirection {
+  LONG
+  SHORT
+}
+
+enum TradeResult {
+  WIN
+  LOSS
+  BREAKEVEN
+}
+
+model Trade {
+  id            String         @id @default(cuid())
+  accountId     String
+  account       Account        @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  symbol        String
+  direction     TradeDirection
+  contracts     Float
+  entryPrice    Float?
+  exitPrice     Float?
+  stopPrice     Float?
+  targetPrice   Float?
+  pnl           Float
+  result        TradeResult
+  openedAt      DateTime
+  closedAt      DateTime
+  notes         String?
+  screenshotUrl String?
+  rulesFollowed String[]       @default([])
+  dedupKey      String?        @unique
+  importSource  String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([accountId, openedAt])
+  @@index([accountId, closedAt])
+}
+
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

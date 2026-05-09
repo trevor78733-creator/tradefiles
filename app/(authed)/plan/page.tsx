@@ -1,0 +1,34 @@
+import { ListEditor } from "@/components/settings/list-editor";
+import { getSettings } from "@/lib/settings";
+
+export default async function TradingPlanPage() {
+  const settings = await getSettings();
+
+  return (
+    <div className="space-y-4 max-w-3xl mx-auto">
+      <header>
+        <h1 className="text-2xl font-semibold tracking-tight">Trading Plan</h1>
+        <p className="text-sm text-muted-foreground">
+          Your strategy and rules. The rules here also drive the
+          rules-followed checklist on the trade entry form.
+        </p>
+      </header>
+
+      <ListEditor
+        settingKey="strategy"
+        title="Strategy"
+        description="One point per item — what you trade, why, and when you skip."
+        initialValue={settings.strategy}
+        addLabel="Add strategy point"
+      />
+
+      <ListEditor
+        settingKey="rules"
+        title="Rules"
+        description="One rule per item. Each one becomes a checkbox on the trade form."
+        initialValue={settings.rules}
+        addLabel="Add rule"
+      />
+    </div>
+  );
+}
