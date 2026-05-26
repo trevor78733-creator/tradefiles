@@ -78,8 +78,9 @@ export function CumulativePnlChart({
           <Tooltip
             content={(p) => (
               <ChartTooltip
-                {...p}
-                payload={p.payload as { value: number }[] | undefined}
+                active={p.active}
+                label={typeof p.label === "string" ? p.label : undefined}
+                payload={p.payload as unknown as { value: number }[] | undefined}
                 valueLabel="Cumulative"
               />
             )}
@@ -149,8 +150,9 @@ export function DailyPnlChart({ data }: { data: { date: string; pnl: number }[] 
           <Tooltip
             content={(p) => (
               <ChartTooltip
-                {...p}
-                payload={p.payload as { value: number }[] | undefined}
+                active={p.active}
+                label={typeof p.label === "string" ? p.label : undefined}
+                payload={p.payload as unknown as { value: number }[] | undefined}
               />
             )}
             cursor={{ fill: "var(--muted)", opacity: 0.3 }}

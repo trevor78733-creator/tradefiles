@@ -49,10 +49,10 @@ export function AnalyticsFilterBar({
   const totalActive =
     activeFilterCount(filters) + (showAccount && accountId !== "ALL" ? 1 : 0);
 
-  function update(key: string, value: string) {
+  function update(key: string, value: string | null) {
     const next = new URLSearchParams(params.toString());
     const prefixed = prefix + key;
-    if (value === "ALL") next.delete(prefixed);
+    if (!value || value === "ALL") next.delete(prefixed);
     else next.set(prefixed, value);
     pushNext(next);
   }

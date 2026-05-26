@@ -42,7 +42,7 @@ export type AnalyticsTrade = {
 
 function rehydrate(
   trades: AnalyticsTrade[]
-): (AnalyticsTrade & { openedAt: Date; closedAt: Date })[] {
+): (Omit<AnalyticsTrade, "openedAt" | "closedAt"> & { openedAt: Date; closedAt: Date })[] {
   return trades.map((t) => ({
     ...t,
     openedAt: new Date(t.openedAt),

@@ -34,9 +34,9 @@ export function TradesFilterBar({
     (result !== ALL ? 1 : 0) +
     (account !== ALL ? 1 : 0);
 
-  function update(key: string, value: string) {
+  function update(key: string, value: string | null) {
     const next = new URLSearchParams(params.toString());
-    if (value === ALL) next.delete(key);
+    if (!value || value === ALL) next.delete(key);
     else next.set(key, value);
     const qs = next.toString();
     router.push(`/trades${qs ? `?${qs}` : ""}`, { scroll: false });

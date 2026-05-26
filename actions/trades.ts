@@ -19,7 +19,9 @@ function parseTrade(formData: FormData) {
   return tradeFormSchema.safeParse({ ...raw, rulesFollowed });
 }
 
-function flattenErrors(parsed: { error: { issues: { path: (string | number)[]; message: string }[] } }) {
+function flattenErrors(parsed: {
+  error: { issues: readonly { path: readonly PropertyKey[]; message: string }[] };
+}) {
   const fieldErrors: Record<string, string[]> = {};
   for (const issue of parsed.error.issues) {
     const key = String(issue.path[0] ?? "_");

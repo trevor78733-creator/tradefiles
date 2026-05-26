@@ -157,7 +157,7 @@ function CalendarRow({
 }: {
   days: { date: Date; inMonth: boolean; pnl: number; tradeCount: number }[];
   weekly?: { pnl: number; tradeCount: number };
-  tradesByDay: Map<string, (CalendarTrade & { closedAt: Date })[]>;
+  tradesByDay: Map<string, (Omit<CalendarTrade, "closedAt"> & { closedAt: Date })[]>;
 }) {
   const today = new Date();
   return (
@@ -258,7 +258,7 @@ function DayDetails({
 }: {
   date: Date;
   pnl: number;
-  trades: (CalendarTrade & { closedAt: Date })[];
+  trades: (Omit<CalendarTrade, "closedAt"> & { closedAt: Date })[];
 }) {
   const dateLabel = date.toLocaleDateString("en-US", {
     weekday: "short",
