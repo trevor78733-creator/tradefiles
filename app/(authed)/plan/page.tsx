@@ -1,8 +1,10 @@
 import { ListEditor } from "@/components/settings/list-editor";
 import { getSettings } from "@/lib/settings";
+import { requireUserId } from "@/lib/auth-helpers";
 
 export default async function TradingPlanPage() {
-  const settings = await getSettings();
+  const userId = await requireUserId();
+  const settings = await getSettings(userId);
 
   return (
     <div className="space-y-4 max-w-3xl mx-auto">

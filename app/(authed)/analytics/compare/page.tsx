@@ -8,10 +8,12 @@ import { resolveDateRange } from "@/lib/date-ranges";
 import { DateRangePicker } from "@/components/dashboard/date-range-picker";
 import { AnalyticsFilterBar } from "@/components/analytics/analytics-filter-bar";
 import { AnalyticsContent } from "@/components/analytics/analytics-content";
+import { requireUserId } from "@/lib/auth-helpers";
 
 export default async function AnalyticsComparePage(
   props: PageProps<"/analytics/compare">
 ) {
+  const userId = await requireUserId();
   await ensureDefaultAccount();
   const search = await props.searchParams;
   const range = resolveDateRange(search.range, search.from, search.to);
@@ -25,6 +27,7 @@ export default async function AnalyticsComparePage(
   const [tradesA, tradesB, symbolRows, accounts] = await Promise.all([
     db.trade.findMany({
       where: {
+        account: { userId },
         accountId: aAccount,
         closedAt: { gte: range.from ?? undefined, lte: range.to ?? undefined },
       },
@@ -32,17 +35,19 @@ export default async function AnalyticsComparePage(
     }),
     db.trade.findMany({
       where: {
+        account: { userId },
         accountId: bAccount,
         closedAt: { gte: range.from ?? undefined, lte: range.to ?? undefined },
       },
       orderBy: { closedAt: "asc" },
     }),
     db.trade.findMany({
+      where: { account: { userId } },
       distinct: ["symbol"],
       select: { symbol: true },
       orderBy: { symbol: "asc" },
     }),
-    listAccounts(),
+    listAccounts(userId),
   ]);
 
   const symbols = symbolRows.map((s) => s.symbol);

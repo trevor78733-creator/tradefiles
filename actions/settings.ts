@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { SETTING_KEYS, type SettingKey } from "@/lib/settings";
+import { requireUserId } from "@/lib/auth-helpers";
 
 export type SettingActionState = {
   ok: boolean;
@@ -17,14 +18,15 @@ export async function updateSetting(
   _prev: SettingActionState,
   formData: FormData
 ): Promise<SettingActionState> {
+  const userId = await requireUserId();
   const key = formData.get("key");
   const value = String(formData.get("value") ?? "");
   if (!isSettingKey(key)) {
     return { ok: false, error: "Invalid setting key" };
   }
   await db.appSetting.upsert({
-    where: { key },
-    create: { key, value },
+    where: { userId_key: { userId, key } },
+    create: { userId, key, value },
     update: { value },
   });
   revalidatePath("/plan");
@@ -36,9 +38,10 @@ export async function updateSetting(
 
 /** Direct (non-form-action) update for inline editors that have their own state. */
 export async function setSettingValue(key: SettingKey, value: string) {
+  const userId = await requireUserId();
   await db.appSetting.upsert({
-    where: { key },
-    create: { key, value },
+    where: { userId_key: { userId, key } },
+    create: { userId, key, value },
     update: { value },
   });
   revalidatePath("/plan");

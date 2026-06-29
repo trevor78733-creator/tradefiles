@@ -15,6 +15,7 @@ import { TradesTable } from "@/components/trades/trades-table";
 import { db } from "@/lib/db";
 import { ensureDefaultAccount } from "@/actions/trades";
 import { listAccounts } from "@/lib/queries";
+import { requireUserId } from "@/lib/auth-helpers";
 import {
   buildCumulativePnl,
   buildDailyPnl,
@@ -29,6 +30,7 @@ import {
 } from "@/lib/format";
 
 export default async function DashboardPage(props: PageProps<"/">) {
+  const userId = await requireUserId();
   await ensureDefaultAccount();
   const search = await props.searchParams;
   const selectedAccountId =
@@ -36,13 +38,15 @@ export default async function DashboardPage(props: PageProps<"/">) {
 
   const range = resolveDateRange(search.range, search.from, search.to);
 
-  const accounts = await listAccounts();
+  const accounts = await listAccounts(userId);
   const selectedAccount = selectedAccountId
     ? accounts.find((a) => a.id === selectedAccountId)
     : undefined;
 
   const allTrades = await db.trade.findMany({
-    where: selectedAccountId ? { accountId: selectedAccountId } : undefined,
+    where: selectedAccountId
+      ? { accountId: selectedAccountId, account: { userId } }
+      : { account: { userId } },
     orderBy: { closedAt: "asc" },
   });
 

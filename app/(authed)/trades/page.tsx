@@ -5,6 +5,7 @@ import { TradesFilterBar } from "@/components/trades/trades-filter-bar";
 import { db } from "@/lib/db";
 import { ensureDefaultAccount } from "@/actions/trades";
 import { listAccounts } from "@/lib/queries";
+import { requireUserId } from "@/lib/auth-helpers";
 import { computeStats } from "@/lib/stats";
 import { formatPercent, formatSigned, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ function pickParam(value: unknown, allowed?: Set<string>): string | undefined {
 }
 
 export default async function TradesPage(props: PageProps<"/trades">) {
+  const userId = await requireUserId();
   await ensureDefaultAccount();
   const search = await props.searchParams;
   const symbolFilter = pickParam(search.symbol);
@@ -33,6 +35,7 @@ export default async function TradesPage(props: PageProps<"/trades">) {
   const [trades, symbolRows, accounts] = await Promise.all([
     db.trade.findMany({
       where: {
+        account: { userId },
         symbol: symbolFilter,
         direction: sideFilter,
         result: resultFilter,
@@ -41,11 +44,12 @@ export default async function TradesPage(props: PageProps<"/trades">) {
       orderBy: { closedAt: "desc" },
     }),
     db.trade.findMany({
+      where: { account: { userId } },
       distinct: ["symbol"],
       select: { symbol: true },
       orderBy: { symbol: "asc" },
     }),
-    listAccounts(),
+    listAccounts(userId),
   ]);
 
   const stats = computeStats(trades);

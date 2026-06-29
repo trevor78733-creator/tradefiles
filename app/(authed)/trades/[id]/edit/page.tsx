@@ -5,15 +5,17 @@ import { listAccounts } from "@/lib/queries";
 import { getSetting } from "@/lib/settings";
 import { db } from "@/lib/db";
 import type { TradeActionState } from "@/actions/trades";
+import { requireUserId } from "@/lib/auth-helpers";
 
 export default async function EditTradePage(
   props: PageProps<"/trades/[id]/edit">
 ) {
+  const userId = await requireUserId();
   const { id } = await props.params;
   const [trade, accounts, rulesText] = await Promise.all([
-    db.trade.findUnique({ where: { id } }),
-    listAccounts(),
-    getSetting("rules"),
+    db.trade.findFirst({ where: { id, account: { userId } } }),
+    listAccounts(userId),
+    getSetting(userId, "rules"),
   ]);
   if (!trade) notFound();
 

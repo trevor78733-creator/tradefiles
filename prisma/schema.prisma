@@ -7,13 +7,29 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id        String   @id @default(cuid())
+  googleId  String   @unique
+  email     String   @unique
+  name      String?
+  image     String?
+  createdAt DateTime @default(now())
+
+  accounts Account[]
+  settings AppSetting[]
+}
+
 model Account {
   id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
   broker    String?
   isDefault Boolean  @default(false)
   createdAt DateTime @default(now())
   trades    Trade[]
+
+  @@index([userId])
 }
 
 enum TradeDirection {
@@ -45,17 +61,22 @@ model Trade {
   notes         String?
   screenshotUrl String?
   rulesFollowed String[]       @default([])
-  dedupKey      String?        @unique
+  dedupKey      String?
   importSource  String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
+  @@unique([accountId, dedupKey])
   @@index([accountId, openedAt])
   @@index([accountId, closedAt])
 }
 
 model AppSetting {
-  key       String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key       String
   value     String
   updatedAt DateTime @updatedAt
+
+  @@id([userId, key])
 }

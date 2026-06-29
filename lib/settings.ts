@@ -8,14 +8,16 @@ export const SETTING_KEYS = [
 ] as const;
 export type SettingKey = (typeof SETTING_KEYS)[number];
 
-export async function getSetting(key: SettingKey): Promise<string> {
-  const row = await db.appSetting.findUnique({ where: { key } });
+export async function getSetting(userId: string, key: SettingKey): Promise<string> {
+  const row = await db.appSetting.findUnique({
+    where: { userId_key: { userId, key } },
+  });
   return row?.value ?? "";
 }
 
-export async function getSettings(): Promise<Record<SettingKey, string>> {
+export async function getSettings(userId: string): Promise<Record<SettingKey, string>> {
   const rows = await db.appSetting.findMany({
-    where: { key: { in: SETTING_KEYS as unknown as string[] } },
+    where: { userId, key: { in: SETTING_KEYS as unknown as string[] } },
   });
   const out = Object.fromEntries(SETTING_KEYS.map((k) => [k, ""])) as Record<
     SettingKey,

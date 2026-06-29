@@ -2,10 +2,12 @@ import { CsvImportFlow } from "@/components/import/csv-import-flow";
 import { listAccounts } from "@/lib/queries";
 import { ensureDefaultAccount } from "@/actions/trades";
 import { BROKER_ADAPTERS } from "@/lib/csv/registry";
+import { requireUserId } from "@/lib/auth-helpers";
 
 export default async function CsvImportPage() {
+  const userId = await requireUserId();
   await ensureDefaultAccount();
-  const accounts = await listAccounts();
+  const accounts = await listAccounts(userId);
   const brokers = BROKER_ADAPTERS.map((a) => ({ id: a.id, name: a.name }));
 
   return (

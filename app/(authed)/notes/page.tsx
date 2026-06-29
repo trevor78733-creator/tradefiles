@@ -4,16 +4,21 @@ import { ensureDefaultAccount } from "@/actions/trades";
 import { getSetting } from "@/lib/settings";
 import { NotesList, type NoteListItem } from "@/components/notes/notes-list";
 import { NoteDetail } from "@/components/notes/note-detail";
+import { requireUserId } from "@/lib/auth-helpers";
 
 export default async function NotesPage(props: PageProps<"/notes">) {
+  const userId = await requireUserId();
   await ensureDefaultAccount();
   const search = await props.searchParams;
   const selectedId =
     typeof search.id === "string" ? search.id : undefined;
 
   const [trades, rulesText] = await Promise.all([
-    db.trade.findMany({ orderBy: { closedAt: "desc" } }),
-    getSetting("rules"),
+    db.trade.findMany({
+      where: { account: { userId } },
+      orderBy: { closedAt: "desc" },
+    }),
+    getSetting(userId, "rules"),
   ]);
 
   const items: NoteListItem[] = trades.map((t) => ({

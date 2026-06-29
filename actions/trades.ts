@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { tradeFormSchema } from "@/lib/validators";
 import { getOrCreateDefaultAccount } from "@/lib/queries";
 import { storeScreenshot } from "@/lib/storage";
+import { requireUserId } from "@/lib/auth-helpers";
 
 export type TradeActionState = {
   ok: boolean;
@@ -30,15 +31,35 @@ function flattenErrors(parsed: {
   return fieldErrors;
 }
 
+// Verify the account belongs to the user. Throws if not.
+async function assertAccountOwner(userId: string, accountId: string) {
+  const account = await db.account.findFirst({
+    where: { id: accountId, userId },
+    select: { id: true },
+  });
+  if (!account) throw new Error("Account not found");
+}
+
+// Verify the trade belongs to the user (via its account). Throws if not.
+async function assertTradeOwner(userId: string, tradeId: string) {
+  const trade = await db.trade.findFirst({
+    where: { id: tradeId, account: { userId } },
+    select: { id: true },
+  });
+  if (!trade) throw new Error("Trade not found");
+}
+
 export async function createTrade(
   _prev: TradeActionState,
   formData: FormData
 ): Promise<TradeActionState> {
+  const userId = await requireUserId();
   const parsed = parseTrade(formData);
   if (!parsed.success) {
     return { ok: false, fieldErrors: flattenErrors(parsed) };
   }
   const data = parsed.data;
+  await assertAccountOwner(userId, data.accountId);
   await db.trade.create({
     data: {
       account: { connect: { id: data.accountId } },
@@ -68,11 +89,14 @@ export async function updateTrade(
   _prev: TradeActionState,
   formData: FormData
 ): Promise<TradeActionState> {
+  const userId = await requireUserId();
   const parsed = parseTrade(formData);
   if (!parsed.success) {
     return { ok: false, fieldErrors: flattenErrors(parsed) };
   }
   const data = parsed.data;
+  await assertTradeOwner(userId, id);
+  await assertAccountOwner(userId, data.accountId);
   await db.trade.update({
     where: { id },
     data: {
@@ -99,13 +123,18 @@ export async function updateTrade(
 }
 
 export async function deleteTrade(id: string) {
-  await db.trade.delete({ where: { id } });
+  const userId = await requireUserId();
+  const result = await db.trade.deleteMany({
+    where: { id, account: { userId } },
+  });
+  if (result.count === 0) throw new Error("Trade not found");
   revalidatePath("/");
   revalidatePath("/trades");
 }
 
 export async function ensureDefaultAccount() {
-  return getOrCreateDefaultAccount();
+  const userId = await requireUserId();
+  return getOrCreateDefaultAccount(userId);
 }
 
 export type NotesActionState = { ok: boolean; error?: string };
@@ -114,10 +143,12 @@ export async function updateTradeRulesFollowed(
   tradeId: string,
   rulesFollowed: string[]
 ) {
-  await db.trade.update({
-    where: { id: tradeId },
+  const userId = await requireUserId();
+  const result = await db.trade.updateMany({
+    where: { id: tradeId, account: { userId } },
     data: { rulesFollowed },
   });
+  if (result.count === 0) throw new Error("Trade not found");
   revalidatePath("/notes");
   revalidatePath("/trades");
 }
@@ -127,11 +158,13 @@ export async function updateTradeNotes(
   _prev: NotesActionState,
   formData: FormData
 ): Promise<NotesActionState> {
+  const userId = await requireUserId();
   const notes = String(formData.get("notes") ?? "").trim();
-  await db.trade.update({
-    where: { id: tradeId },
+  const result = await db.trade.updateMany({
+    where: { id: tradeId, account: { userId } },
     data: { notes: notes.length ? notes : null },
   });
+  if (result.count === 0) return { ok: false, error: "Trade not found" };
   revalidatePath("/notes");
   revalidatePath("/trades");
   return { ok: true };
@@ -144,10 +177,12 @@ export async function uploadTradeScreenshot(
   _prev: UploadActionState,
   formData: FormData
 ): Promise<UploadActionState> {
+  const userId = await requireUserId();
   const file = formData.get("file");
   if (!(file instanceof File)) {
     return { ok: false, error: "No file selected" };
   }
+  await assertTradeOwner(userId, tradeId);
   const stored = await storeScreenshot(file, tradeId);
   if (!stored.ok) return stored;
 
@@ -166,6 +201,7 @@ export type ImageUploadResult = { ok: boolean; url?: string; error?: string };
 // drop/paste). The URL is stored on the form and attached when the trade is
 // saved.
 export async function uploadImage(formData: FormData): Promise<ImageUploadResult> {
+  await requireUserId();
   const file = formData.get("file");
   if (!(file instanceof File)) {
     return { ok: false, error: "No file selected" };
@@ -174,10 +210,12 @@ export async function uploadImage(formData: FormData): Promise<ImageUploadResult
 }
 
 export async function clearTradeScreenshot(tradeId: string) {
-  await db.trade.update({
-    where: { id: tradeId },
+  const userId = await requireUserId();
+  const result = await db.trade.updateMany({
+    where: { id: tradeId, account: { userId } },
     data: { screenshotUrl: null },
   });
+  if (result.count === 0) throw new Error("Trade not found");
   revalidatePath("/notes");
   revalidatePath("/trades");
 }

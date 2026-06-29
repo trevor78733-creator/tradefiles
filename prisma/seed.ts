@@ -21,11 +21,23 @@ function isWeekday(d: Date) {
 }
 
 async function main() {
+  const user = await db.user.upsert({
+    where: { googleId: "seed-demo" },
+    update: {},
+    create: {
+      id: "seed-demo-user",
+      googleId: "seed-demo",
+      email: "demo@example.com",
+      name: "Demo User",
+    },
+  });
+
   const account = await db.account.upsert({
     where: { id: "seed-default" },
     update: {},
     create: {
       id: "seed-default",
+      userId: user.id,
       name: "Demo Account",
       broker: "TopstepX",
       isDefault: true,

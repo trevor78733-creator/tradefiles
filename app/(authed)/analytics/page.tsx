@@ -8,8 +8,10 @@ import { resolveDateRange } from "@/lib/date-ranges";
 import { DateRangePicker } from "@/components/dashboard/date-range-picker";
 import { AnalyticsFilterBar } from "@/components/analytics/analytics-filter-bar";
 import { AnalyticsContent } from "@/components/analytics/analytics-content";
+import { requireUserId } from "@/lib/auth-helpers";
 
 export default async function AnalyticsPage(props: PageProps<"/analytics">) {
+  const userId = await requireUserId();
   await ensureDefaultAccount();
   const search = await props.searchParams;
   const accountId = typeof search.account === "string" ? search.account : undefined;
@@ -18,6 +20,7 @@ export default async function AnalyticsPage(props: PageProps<"/analytics">) {
   const [trades, symbolRows, accounts] = await Promise.all([
     db.trade.findMany({
       where: {
+        account: { userId },
         accountId,
         closedAt: {
           gte: range.from ?? undefined,
@@ -27,11 +30,12 @@ export default async function AnalyticsPage(props: PageProps<"/analytics">) {
       orderBy: { closedAt: "asc" },
     }),
     db.trade.findMany({
+      where: { account: { userId } },
       distinct: ["symbol"],
       select: { symbol: true },
       orderBy: { symbol: "asc" },
     }),
-    listAccounts(),
+    listAccounts(userId),
   ]);
 
   return (
