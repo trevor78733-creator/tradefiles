@@ -169,8 +169,7 @@ function RowMenu({ id }: { id: string }) {
         </DropdownMenuItem>
         <DropdownMenuItem
           variant="destructive"
-          onSelect={(e) => {
-            e.preventDefault();
+          onClick={() => {
             if (!confirm("Delete this trade? This cannot be undone.")) return;
             startTransition(async () => {
               try {
