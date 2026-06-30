@@ -93,32 +93,75 @@ export function AnalyticsContent({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div
+        className={cn(
+          "grid gap-4",
+          compact ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
+        )}
+      >
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Net P&L</CardTitle>
+          <CardHeader className={compact ? "pb-2" : undefined}>
+            <CardTitle
+              className={cn(
+                "text-base flex items-baseline justify-between gap-2",
+                compact && "text-sm"
+              )}
+            >
+              <span>Net P&L</span>
+              {compact && (
+                <span className="text-xs text-muted-foreground font-normal">
+                  {stats.count} {stats.count === 1 ? "trade" : "trades"}
+                </span>
+              )}
+            </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-3 gap-4">
+          <CardContent
+            className={cn(
+              "grid gap-4",
+              compact ? "grid-cols-2" : "grid-cols-3"
+            )}
+          >
             <BigStat
               label="Net"
               value={formatSigned(stats.netPnl)}
               tone={stats.netPnl > 0 ? "profit" : stats.netPnl < 0 ? "loss" : "default"}
+              compact={compact}
             />
-            <BigStat label="Avg / trade" value={formatSigned(avgPnl)} />
-            <BigStat label="trades" value={stats.count} />
+            <BigStat
+              label="Avg / trade"
+              value={formatSigned(avgPnl)}
+              compact={compact}
+            />
+            {!compact && <BigStat label="trades" value={stats.count} />}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Win rate</CardTitle>
+          <CardHeader className={compact ? "pb-2" : undefined}>
+            <CardTitle className={cn("text-base", compact && "text-sm")}>
+              Win rate
+            </CardTitle>
           </CardHeader>
-          <CardContent className="flex items-center gap-6">
-            <div className="grid grid-cols-3 gap-4 flex-1">
-              <BigStat label="Win rate" value={formatPercent(stats.winRate)} />
-              <BigStat label="wins" value={stats.wins} />
-              <BigStat label="losses" value={stats.losses} />
-              {stats.breakeven > 0 && (
+          <CardContent
+            className={cn(
+              "flex items-center",
+              compact ? "gap-3" : "gap-6"
+            )}
+          >
+            <div
+              className={cn(
+                "grid gap-3 flex-1 min-w-0",
+                compact ? "grid-cols-3" : "grid-cols-3 gap-4"
+              )}
+            >
+              <BigStat
+                label="Win rate"
+                value={formatPercent(stats.winRate)}
+                compact={compact}
+              />
+              <BigStat label="Wins" value={stats.wins} compact={compact} />
+              <BigStat label="Losses" value={stats.losses} compact={compact} />
+              {!compact && stats.breakeven > 0 && (
                 <BigStat label="breakeven" value={stats.breakeven} />
               )}
             </div>
@@ -126,7 +169,7 @@ export function AnalyticsContent({
               wins={stats.wins}
               losses={stats.losses}
               breakeven={stats.breakeven}
-              size="md"
+              size={compact ? "sm" : "md"}
             />
           </CardContent>
         </Card>
@@ -138,14 +181,32 @@ export function AnalyticsContent({
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Best & worst</CardTitle>
+        <CardHeader className={compact ? "pb-2" : undefined}>
+          <CardTitle className={cn("text-base", compact && "text-sm")}>
+            Best & worst
+          </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <BigStat label="Largest win" value={formatUsd(stats.largestWin)} />
-          <BigStat label="Largest loss" value={formatUsd(stats.largestLoss)} />
-          <BigStat label="Best day" value={formatUsd(stats.bestDayPnl)} />
-          <BigStat label="Worst day" value={formatUsd(stats.worstDayPnl)} />
+          <BigStat
+            label="Largest win"
+            value={formatUsd(stats.largestWin)}
+            compact={compact}
+          />
+          <BigStat
+            label="Largest loss"
+            value={formatUsd(stats.largestLoss)}
+            compact={compact}
+          />
+          <BigStat
+            label="Best day"
+            value={formatUsd(stats.bestDayPnl)}
+            compact={compact}
+          />
+          <BigStat
+            label="Worst day"
+            value={formatUsd(stats.worstDayPnl)}
+            compact={compact}
+          />
         </CardContent>
       </Card>
 
@@ -171,19 +232,27 @@ function BigStat({
   label,
   value,
   tone = "default",
+  compact = false,
 }: {
   label: string;
   value: React.ReactNode;
   tone?: "default" | "profit" | "loss";
+  compact?: boolean;
 }) {
   return (
-    <div>
-      <div className="text-xs uppercase tracking-wide text-muted-foreground">
+    <div className="min-w-0">
+      <div
+        className={cn(
+          "uppercase tracking-wide text-muted-foreground truncate",
+          compact ? "text-[10px]" : "text-xs"
+        )}
+      >
         {label}
       </div>
       <div
         className={cn(
-          "mt-1 font-mono text-2xl font-semibold tabular-nums tracking-tight",
+          "mt-1 font-mono font-semibold tabular-nums tracking-tight truncate",
+          compact ? "text-base" : "text-2xl",
           tone === "profit" && "text-profit",
           tone === "loss" && "text-loss"
         )}

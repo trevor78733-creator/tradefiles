@@ -4,13 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
-  ClipboardCheck,
   LayoutDashboard,
   ListChecks,
   LogOut,
   NotebookPen,
   Target,
-  Upload,
 } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { signOutAction } from "@/actions/auth";
@@ -18,12 +16,10 @@ import { cn } from "@/lib/utils";
 
 const links = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/trades", label: "Trade Log", icon: ListChecks },
-  { href: "/import/csv", label: "Import CSV", icon: Upload },
   { href: "/notes", label: "Notes", icon: NotebookPen },
-  { href: "/plan", label: "Trading Plan", icon: Target },
-  { href: "/checklist", label: "Checklist & Goals", icon: ClipboardCheck },
+  { href: "/trades", label: "Trade Log", icon: ListChecks },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/plan", label: "Trading Plan & Goals", icon: Target },
 ];
 
 export function AppSidebar() {

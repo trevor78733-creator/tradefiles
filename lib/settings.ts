@@ -3,7 +3,6 @@ import { db } from "./db";
 export const SETTING_KEYS = [
   "strategy",
   "rules",
-  "premarket_checklist",
   "goals",
 ] as const;
 export type SettingKey = (typeof SETTING_KEYS)[number];

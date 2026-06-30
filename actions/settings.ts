@@ -30,7 +30,6 @@ export async function updateSetting(
     update: { value },
   });
   revalidatePath("/plan");
-  revalidatePath("/checklist");
   // Trade form pulls the rules list, so re-render the trade entry views too.
   revalidatePath("/trades/new");
   return { ok: true };
@@ -45,6 +44,5 @@ export async function setSettingValue(key: SettingKey, value: string) {
     update: { value },
   });
   revalidatePath("/plan");
-  revalidatePath("/checklist");
   revalidatePath("/trades/new");
 }

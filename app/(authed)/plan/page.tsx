@@ -1,4 +1,5 @@
 import { ListEditor } from "@/components/settings/list-editor";
+import { GoalsChecklist } from "@/components/settings/goals-checklist";
 import { getSettings } from "@/lib/settings";
 import { requireUserId } from "@/lib/auth-helpers";
 
@@ -9,10 +10,13 @@ export default async function TradingPlanPage() {
   return (
     <div className="space-y-4 max-w-3xl mx-auto">
       <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Trading Plan</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Trading Plan & Goals
+        </h1>
         <p className="text-sm text-muted-foreground">
-          Your strategy and rules. The rules here also drive the
-          rules-followed checklist on the trade entry form.
+          Your strategy, rules, and the goals you&apos;re working toward.
+          The rules here also drive the rules-followed checklist on the
+          trade entry form.
         </p>
       </header>
 
@@ -31,6 +35,8 @@ export default async function TradingPlanPage() {
         initialValue={settings.rules}
         addLabel="Add rule"
       />
+
+      <GoalsChecklist initialValue={settings.goals} />
     </div>
   );
 }
